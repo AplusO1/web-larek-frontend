@@ -138,6 +138,23 @@ export type ApiListResponse<Type> = {
 }
 ```
 
+Интерфейс события
+
+```
+export interface ISuccessActions {
+	onClick: () => void;
+}
+```
+
+Интерфейс события
+
+```
+export interface IActions {
+	onClick: (event: MouseEvent) => void;
+}
+```
+
+
 ## Архитектура приложения
 
 Код приложения разделен на слои согласно парадигме MVP:
@@ -164,8 +181,11 @@ export type ApiListResponse<Type> = {
 #### Класс Api
 Содержит в себе базовую логику отправки запросов. В конструктор передается базовый адрес сервера и опциональный объект с заголовками запросов.\
 Поля классов:
-`baseUrl: string` - принимает базовый URL
-`options: RequestInit = {}` - принимает глобальные опции для всех запросов(опционально)
+- `baseUrl: string` - принимает базовый URL
+- `options: RequestInit = {}` - принимает глобальные опции для всех запросов(опционально)
+
+Конструктор:
+- `constructor(cdn: string, baseUrl: string, options?: RequestInit)` - принимает базовый URL и глобальные опции для всех запросов(опционально).
 
 Методы:
 - `handleResponse(response: Response): Promise<object>` - обработчик ответа сервера. Принимает ответ и возвращает его, если ответа нет возвращает ошибку.
@@ -176,6 +196,9 @@ export type ApiListResponse<Type> = {
 Наследник класса Api.\
 Поля класса:
 - `cdn(string)` - Базовый URL адрес
+
+Конструктор:
+- `constructor(cdn: string, baseUrl: string, options?: RequestInit)` - принимает базовый URL для получения контента, базовый URL для запросов и глобальные опции для всех запросов(опционально).
 
 Методы класса:
 - `getCardList(): Promise<ICard[]>` - получаем список всех карточек с сервера
@@ -238,6 +261,9 @@ export type ApiListResponse<Type> = {
 - `button: HTMLButtonElement` - кнопка удаления
 - `total: HTMLElement` - цена общая
 
+Конструктор:
+- `constructor(container: HTMLElement, events: EventEmitter)` - принимает DOM-элемент контейнера для отображения корзины и объект для управления событиями.
+
 Методы:
 - `set items(items: HTMLElement[])` - вставить данные в корзину
 - `set total(price: number)` - посчитать общую стоимость товара
@@ -247,6 +273,9 @@ export type ApiListResponse<Type> = {
 Поля класса:
 - `submit` - HTMLButtonElement
 - `errors` - HTMLElement 
+
+Конструктор:
+- `constructor(protected container: HTMLFormElement, protected events: IEvents)` - принимает DOM-элемент формы и объект для управления событиями.
 
 Методы:
 - `InputChange` - обработчик событий ввода.
@@ -259,6 +288,9 @@ export type ApiListResponse<Type> = {
 Поля класса:
 - `closeButton` - HTMLButtonElement
 - `content` - HTMLElement
+
+Конструктор:
+- `constructor(container: HTMLElement, events: IEvents)` - принимает DOM-элемент контейнера для отображения модального окна и объект для управления событиями.
 
 Методы: 
 - `set content` - определяет контент показа в модальном окне.
@@ -273,6 +305,9 @@ export type ApiListResponse<Type> = {
 - `title` - HTMLElement
 - `image` - HTMLImageElement
 - `price` - HTMLElement
+
+Конструктор:
+- `constructor(container: HTMLElement, actions?: IActions)` - принимает DOM-элемент контейнера для отображения карточки товара и объект для управления событиями (опционально).
 
 Методы:
 - `set category(value: string)` - принимает строку с сервера, устанавливает категорию.
@@ -289,6 +324,9 @@ export type ApiListResponse<Type> = {
 - `wrapper` - HTMLImageElement
 - `basket` - HTMLElement
 
+Конструктор:
+- `constructor(container: HTMLElement, events: IEvents)` - принимает DOM-элемент контейнера для отображения главной страницы и объект для управления событиями.
+
 Методы:
 - `set counter(value: number)` - изменить счетчик товара в корзине на главной странице
 - `set catalog(items: HTMLElement[])` - вывести список карточек
@@ -300,6 +338,9 @@ export type ApiListResponse<Type> = {
 - `phone` - string
 - `email`- string
 
+Конструктор:
+- `constructor(container: HTMLFormElement, events: IEvents)` - принимает DOM-элемент формы для ввода контактных данных и объект для управления событиями.
+
 Методы:
 - `set phone` - ввод телефона.
 - `set email` - ввод почты.
@@ -309,6 +350,9 @@ export type ApiListResponse<Type> = {
 Поля класса:
 - `total` - number
 
+Конструктор:
+- `constructor(container: HTMLElement, actions: ISuccessActions)` - принимает DOM-элемент контейнера для отображения сообщения об успешном заказе и объект для управления событиями успешного действия.
+
 Методы:
 - `set total` - устанавливает текст в элемент. 
 
@@ -317,6 +361,9 @@ export type ApiListResponse<Type> = {
 Поля класса:
 - `buttons` - HTMLButtonElement
 - `address` - string
+
+Конструктор:
+- `constructor(container: HTMLFormElement, events: IEvents)` - принимает DOM-элемент формы для ввода данных заказа и объект для управления событиями.
 
 Методы класса:
 - `set payment(name: string)` - переключение между кнопками.

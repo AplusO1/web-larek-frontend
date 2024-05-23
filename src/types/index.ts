@@ -62,3 +62,12 @@ export type ApiListResponse<Type> = {
 	items: Type[];
 };
 
+//Интерфейс события
+export interface ISuccessActions {
+	onClick: () => void;
+}
+
+//Интерфейс события
+export interface IActions {
+	onClick: (event: MouseEvent) => void;
+}
