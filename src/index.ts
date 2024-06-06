@@ -1,126 +1,213 @@
-// import './scss/styles.scss';
+import './scss/styles.scss'; // Импорт стилей
 
-// import { IBasketModel, IEventEmitter, IProduct, CatalogModel, IViewConstructor, IView } from './types';
+import { AppState } from './components/AppState';
+import { EventEmitter } from './components/base/events';
+import { WebLarekApi } from './components/WebLarekApi';
+import { API_URL, CDN_URL } from './utils/constants';
+import { Card, CardPreview, CardBasket } from './components/card';
+import { Page } from './components/page';
+import { cloneTemplate, ensureElement } from './utils/utils';
+import { Modal } from './components/modal';
+import { ICard, IOrderForm } from './types';
+import { Basket } from './components/basket';
+import { Order } from './components/orderForm';
+import { Contacts } from './components/contactForm';
+import { Success } from './components/success';
 
-// class BasketModel implements IBasketModel {
-//   items: Map<string, number> = new Map();
+const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog'); // Шаблон каталога главной страницы
+const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview'); // Шаблон превью карточки
+const basketTemplate = ensureElement<HTMLTemplateElement>('#basket'); // Шаблон корзины
+const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket'); // Шаблон карточек в корзине
+const orderTemplate = ensureElement<HTMLTemplateElement>('#order'); //Шаблон формы заказа
+const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts'); //Шаблон формы контактов
+const successTemplate = ensureElement<HTMLTemplateElement>('#success'); //Шаблон формы успешного заказа
+const events = new EventEmitter(); // Создаем переменную управления событиями
+const appState = new AppState({}, events); // Создаем переменную модели данных
+const api = new WebLarekApi(CDN_URL, API_URL); // Создаем переменную управления Апи
+const page = new Page(document.body, events); // Создаем переменную главной страницы
+const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events); // Создаем переменную модального окна
+const basket = new Basket(cloneTemplate(basketTemplate), events); // Создаем переменную корзины
+const delivery = new Order(cloneTemplate(orderTemplate), events); //Создаем переменную формы доставки
+const contact = new Contacts(cloneTemplate(contactsTemplate), events); //Создаем переменную формы контактов
 
-//   add(id: string): void {
-//     if(!this.items.has(id)) this.items.set((id, 0));
-//     this.items.set(id, this.items.get(id)! + 1);
-//   }
+// Получение и отображение списка карточек
+api
+	.getCardList()
+	.then(appState.setCatalog.bind(appState))
+	.catch((err) => {
+		console.log(err);
+	});
 
-//   remove(id: string): void {
-//     if (!this.items.has(id)) return;
-//     if (this.items.has(id) > 0) {
-//       this.items.set(id, this.items.get(id)! - 1);
-//       if(this.items.get(id) === 0) this.items.delete(id);
-//     }
-//   }
-// }
+events.on('items:changed', () => {
+	page.catalog = appState.cardList.map((item) => {
+		const card = new Card(cloneTemplate(cardCatalogTemplate), {
+			onClick: () => events.emit('card:select', item),
+		});
+		return card.render({
+			category: item.category,
+			title: item.title,
+			image: item.image,
+			price: item.price,
+		});
+	});
+});
 
-// class BasketModel implements IBasketModel {
-//   constructor(protected events: IEventEmitter) {}
+// Получение данных и открытие превью карточки
+events.on('card:select', (item: ICard) => {
+	appState.setPreview(item);
+});
 
-//   add(id: string): void {
-//     this._changed();
-//   }
+events.on('preview:changed', (item: ICard) => {
+	const card = new CardPreview(cloneTemplate(cardPreviewTemplate), {
+		onClick: () => events.emit('card:add', item),
+	});
+	modal.render({
+		content: card.render({
+			title: item.title,
+			image: item.image,
+			description: item.description,
+			price: item.price,
+			category: item.category,
+		}),
+	});
+	// Отключение кнопки если товар уже добавлен в корзину и если товар бесценный
+	if (appState.basket.some((basketItem) => basketItem.id === item.id) || item.price === null) {
+		card.disableButton();
+	}
+});
 
-//   remove(id: string): void {
-//     this._changed()
-//   }
+// Блокируем прокрутку страницы если открыто модальное окно
+events.on('modal:open', () => {
+	page.locked = true;
+});
 
-//   protected _changed() {
-//     this.events.emit('basket: change', {items: Array.from(this.items.keys())})
-//   }
-// }
+// Разблокируем прокрутку страницы если закрыто модальное окно
+events.on('modal:close', () => {
+	page.locked = false;
+});
 
-// const events = new EventEmitter();
+// Добавление товара в заказ и корзину, обновление счетчика корзины на главной страницы
+events.on('card:add', (item: ICard) => {
+	console.log(`card:add event triggered for item ${item.id}`);
+	appState.addCardToBasket(item);
+	page.counter = appState.basketList.length;
+	modal.close();
+	events.emit('basket:update');
+});
 
-// const basket = new BasketModel(events);
+// Обновление корзины
+events.on('basket:update', () => {
+	basket.setDisabled(basket.button, appState.statusBasket);
+	basket.total = appState.getTotal();
 
-// events.on('basket:change', (data: {items: string[]}) =>{
+	let i = 1;
+	basket.items = appState.basketList.map((item) => {
+		const card = new CardBasket(cloneTemplate(cardBasketTemplate), {
+			onClick: () => events.emit('card:remove', item),
+		});
+		return card.render({
+			title: item.title,
+			price: item.price,
+			index: i++,
+		});
+	});
 
-// })
+	modal.render({
+		content: basket.render(),
+	});
+});
 
+// Открытие корзины, отображение товаров и суммы заказа
+events.on('basket:open', () => {
+	events.emit('basket:update');
+});
 
-// class BasketItemView implements IView {
-// 	protected title: HTMLSpanElement;
-// 	protected addButton: HTMLButtonElement;
-// 	protected removeButton: HTMLButtonElement;
+// Удаление товара из корзины
+events.on('card:remove', (item: ICard) => {
+	appState.deleteCardToBasket(item);
+	page.counter = appState.basketList.length;
+	events.emit('basket:update');
+});
 
-// 	protected id: string | null = null;
+//Открытие формы доставки и смена оплаты
+events.on('order:open', () => {
+	modal.render({
+		content: delivery.render({
+			payment: '',
+			address: '',
+			valid: false,
+			errors: [],
+		}),
+	});
+	appState.order.items = appState.basket.map((item) => item.id);
+});
+events.on('payment:change', (item: HTMLButtonElement) => {
+	appState.order.payment = item.name;
+});
 
-// 	constructor(
-// 		protected container: HTMLElement,
-// 		protected events: IEventEmitter
-// 	) {
-// 		this.title = container.querySelector(
-// 			'.basket-item__title'
-// 		) as HTMLSpanElement;
-// 		this.addButton = container.querySelector(
-// 			'.basket-item__add'
-// 		) as HTMLButtonElement;
-// 		this.removeButton = container.querySelector(
-// 			'.basket-item__remove'
-// 		) as HTMLButtonElement;
+//Изменение поля ввода доставки
+events.on(
+	/^order\..*:change/,
+	(data: { field: keyof IOrderForm; value: string }) => {
+		appState.setOrderField(data.field, data.value);
+	}
+);
 
-// 		this.addButton.addEventListener('click', () => {
-// 			this.events.emit('ui:basket-add', { id: this.id });
-// 		});
+//Валидация
+events.on('formErrors:change', (errors: Partial<IOrderForm>) => {
+	const { email, phone, address, payment } = errors;
+	delivery.valid = !address && !payment;
+	contact.valid = !email && !phone;
+	delivery.errors = Object.values({ address, payment })
+		.filter((i) => !!i)
+		.join('; ');
+	contact.errors = Object.values({ phone, email })
+		.filter((i) => !!i)
+		.join('; ');
+});
 
-// 		this.addButton.addEventListener('click', () => {
-// 			this.events.emit('ui:basket-remove', { id: this.id });
-// 		});
-// 	}
+//Отправляем данные доставки и открываем модальное окно контактов
+events.on('order:submit', () => {
+	appState.order.total = appState.getTotal();
+	modal.render({
+		content: contact.render({
+			email: '',
+			phone: '',
+			valid: false,
+			errors: [],
+		}),
+	});
+});
 
-// 	render(data: { id: string; title: string }) {
-// 		if (data) {
-// 			this.id = data.id;
-// 			this.title.textContent = data.title;
-// 		}
-// 		return this.container;
-// 	}
-// }
+//Изменение поля ввода контактов
+events.on(
+	/^contacts\..*:change/,
+	(data: { field: keyof IOrderForm; value: string }) => {
+		appState.setContactsField(data.field, data.value);
+	}
+);
 
-// class BasketView implements IView {
-// 	constructor(protected container: HTMLElement) {}
-// 	render(data: { items: HTMLElement[] }) {
-// 		if (data) {
-// 			this.container.replaceChildren(...data.items);
-// 		}
-// 		return this.container;
-// 	}
-// }
-
-// const api = new ShopAPI();
-// const events = new EventEmitter();;
-// const BasketView = new BasketView(document.querySelector('.basket'));
-// const basketModel = new BasketModel(events);
-// const CatalogModel = new CatalogModel(events);
-
-// function renderBasket(items: string[]) {
-//   BasketView.render(
-//     items.map(id => {
-//       const itemView = new BasketItemView(events);
-//       return itemView.render(CatalogModel.getProduct(id));
-//     })
-//   );
-// }
-
-// events.on('basket:change', (event: {items: string[]})=> {
-//   renderBasket(event.items);
-// })
-
-// events.on('ui:basket-add', (event: {id: string})=> {
-//   basketModel.remove(event.id)
-// })
-
-// events.on ('ui:basket-remove', (event: {id: string}) => {
-//   basketModel.remove(event.id)
-// })
-
-
-// api.getCatalog()
-//   .then(catalogModel.setItems.bind(catalogModel))
-//   .catch(err => console.error(err))
+//Отправляем форму контактов и открываем окно с успешным заказом
+events.on('contacts:submit', () => {
+	api
+		.orderCard(appState.order)
+		.then(() => {
+			const total = appState.getTotal();
+			console.log(total);
+			appState.clearBasket();
+			page.counter = appState.basketList.length;
+			const success = new Success(cloneTemplate(successTemplate), {
+				onClick: () => {
+					modal.close();
+				},
+			});
+			modal.render({
+				content: success.render({
+					total: total,
+				}),
+			});
+		})
+		.catch((err) => {
+			console.error(err);
+		});
+});

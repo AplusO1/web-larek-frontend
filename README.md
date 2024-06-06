@@ -76,6 +76,14 @@ export interface ICard {
 }
 ```
 
+Модальное окно
+
+```
+export interface IModalData {
+	content: HTMLElement;
+}
+```
+
 Интерфейс формы заказа
 
 ```
@@ -129,6 +137,16 @@ export interface IBasket {
 }
 ```
 
+Интерфейс карточки в корзине
+
+```
+export interface ICardBasket {
+	index: number;
+	title: string;
+	price: number;
+}
+```
+
 Api ответ с сервера для списка обьектов
 
 ```
@@ -153,6 +171,14 @@ export interface IActions {
 	onClick: (event: MouseEvent) => void;
 }
 ```
+Интерфейс формы успешного заказа
+
+```
+export interface ISuccess {
+	total: number;
+  }
+```
+
 
 
 ## Архитектура приложения
@@ -331,6 +357,34 @@ export interface IActions {
 - `set counter(value: number)` - изменить счетчик товара в корзине на главной странице
 - `set catalog(items: HTMLElement[])` - вывести список карточек
 - `set locked(value: boolean)` - установка или снятие блока прокрутки страницы
+
+### Класс Modal
+Класс для работы с модальным окном.
+Поля класса:
+- `closeButton` - HTMLButtonElement;
+- `content` - HTMLElement;
+
+Конструктор:
+- `constructor(container: HTMLElement, events: IEvents)`
+
+Методы:
+- `set content` - определяет контент в модальном окне.
+- `open` - открывает модальное окно.
+- `close` - закрывает модальное окно.
+- `render` - рендерит модальное окно.
+
+### Класс CardBasket
+Описание карточки товара. Наследуется от класса Card.
+Поля класса:
+- `index` - number;
+- `title` - string;
+- `price` - number;
+
+Методы:
+- `set index(value: number)` - принимает номер, устанавливает индекс.
+- `set title(value: string)` - принимает строку, устанавливает текст.
+- `set price(value: number | null)` - принимает номер, устанавливает цену.
+
 
 #### Класс Contacts 
 Отображение модального окна заполнения почты, телефона.\
