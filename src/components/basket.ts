@@ -1,34 +1,39 @@
-import {Component} from './base/component';
-import {createElement, ensureElement} from './../utils/utils';
-import {IBasket} from '../types';
-import {EventEmitter} from './base/events';
+import { Component } from './base/Component';
+import { createElement, ensureElement } from '../utils/utils';
+import { IBasket } from '../types';
+import { EventEmitter } from './base/Events';
 
 export class Basket extends Component<IBasket> {
-  protected _list: HTMLElement;
-  button: HTMLButtonElement;
-  protected _total: HTMLElement;
+	protected _list: HTMLElement;
+	button: HTMLButtonElement;
+	protected _total: HTMLElement;
 
-  constructor(container: HTMLElement, protected events: EventEmitter) {
-    super(container);
-	  this._list = ensureElement<HTMLElement>('.basket__list', this.container);
-	  this.button = this.container.querySelector('.basket__button');
-    this._total = this.container.querySelector('.basket__price');
-    if(this.button) this.button.addEventListener('click', () => events.emit('order:open'));
-    
-    this.items = [];
-  }
+	constructor(container: HTMLElement, protected events: EventEmitter) {
+		super(container);
+		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
+		this.button = this.container.querySelector('.basket__button');
+		this._total = this.container.querySelector('.basket__price');
+		if (this.button)
+			this.button.addEventListener('click', () => events.emit('order:open'));
 
-  //Вставляем данные в корзину
-  set items(items: HTMLElement[]) {
-    if (items.length) {
-        this._list.replaceChildren(...items);
-    } else {
-        this._list.replaceChildren(createElement<HTMLParagraphElement>('p', {textContent: 'Корзина пуста',}));
-    }
-  }
+		this.items = [];
+	}
 
-  //Устанавливаем общую сумму товаров в корзине
-  set total(total: number) {
-    this.setText(this._total, `${total.toString()} синапсов`);
-  }
+	//Вставляем данные в корзину
+	set items(items: HTMLElement[]) {
+		if (items.length) {
+			this._list.replaceChildren(...items);
+		} else {
+			this._list.replaceChildren(
+				createElement<HTMLParagraphElement>('p', {
+					textContent: 'Корзина пуста',
+				})
+			);
+		}
+	}
+
+	//Устанавливаем общую сумму товаров в корзине
+	set total(total: number) {
+		this.setText(this._total, `${total.toString()} синапсов`);
+	}
 }

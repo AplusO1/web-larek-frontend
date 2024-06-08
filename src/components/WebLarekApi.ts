@@ -1,4 +1,4 @@
-import { Api } from './base/api';
+import { Api } from './base/Api';
 import { ICard, ApiListResponse, IOrder, ISuccessForm } from '../types/index';
 
 export class WebLarekApi extends Api {

@@ -1,18 +1,18 @@
 import './scss/styles.scss'; // Импорт стилей
 
 import { AppState } from './components/AppState';
-import { EventEmitter } from './components/base/events';
+import { EventEmitter } from './components/base/Events';
 import { WebLarekApi } from './components/WebLarekApi';
 import { API_URL, CDN_URL } from './utils/constants';
-import { Card, CardPreview, CardBasket } from './components/card';
-import { Page } from './components/page';
+import { Card, CardPreview, CardBasket } from './components/Card';
+import { Page } from './components/Page';
 import { cloneTemplate, ensureElement } from './utils/utils';
-import { Modal } from './components/modal';
+import { Modal } from './components/Modal';
 import { ICard, IOrderForm } from './types';
-import { Basket } from './components/basket';
-import { Order } from './components/orderForm';
-import { Contacts } from './components/contactForm';
-import { Success } from './components/success';
+import { Basket } from './components/Basket';
+import { Order } from './components/OrderForm';
+import { Contacts } from './components/ContactForm';
+import { Success } from './components/Success';
 
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog'); // Шаблон каталога главной страницы
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview'); // Шаблон превью карточки
@@ -71,7 +71,10 @@ events.on('preview:changed', (item: ICard) => {
 		}),
 	});
 	// Отключение кнопки если товар уже добавлен в корзину и если товар бесценный
-	if (appState.basket.some((basketItem) => basketItem.id === item.id) || item.price === null) {
+	if (
+		appState.basket.some((basketItem) => basketItem.id === item.id) ||
+		item.price === null
+	) {
 		card.disableButton();
 	}
 });
