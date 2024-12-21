@@ -1,6 +1,7 @@
 # Проектная работа "Веб-ларек"
-##Для запуска проекта вам понадобится создать в корне файл с именем .env и разместить в нем следующее содержимое:
+## Для запуска проекта вам понадобится создать в корне файл с именем .env и разместить в нем следующее содержимое:
 API_ORIGIN=https://larek-api.nomoreparties.co
+
 ## [Макет](https://www.figma.com/design/50YEgxY8IYDYj7UQu7yChb/%D0%92%D0%B5%D0%B1-%D0%BB%D0%B0%D1%80%D1%91%D0%BA?node-id=0-1&node-type=canvas&t=4uibGzbvbBJlFNIe-0)
 Стек: HTML, SCSS, TS, Webpack
 
